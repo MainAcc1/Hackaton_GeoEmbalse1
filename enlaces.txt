@@ -1,0 +1,4 @@
+enlaces: 
+API: https://g38424687033997-s9ccz2028y5z7jb4.adb.eu-madrid-1.oraclecloudapps.com/ords/user/tabla_completa/
+Web con filtro de búsqueda: https://objectstorage.eu-madrid-1.oraclecloud.com/n/axdakt3wdpb7/b/web_oracle/o/web2WEB_ORACLE%202.0.html
+Web con la base de datos: https://objectstorage.eu-madrid-1.oraclecloud.com/n/axdakt3wdpb7/b/web_oracle/o/webWEB_ORACLE.html

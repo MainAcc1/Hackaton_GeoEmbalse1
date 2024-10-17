@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>ODS del Agua - Filtro Geolocalización</title>
+    <style>
+        /* Paleta de colores */
+        :root {
+            --primary-color: #4DA8DA;
+            --secondary-color: #065A82;
+            --accent-color: #A1C3D1;
+            --background-color: #F4F9F9;
+            --hover-color: #FFD700;
+            --button-hover-bg: #A1C3D1;
+            --button-hover-shadow: rgba(0, 0, 0, 0.2);
+            --blur-background-start: #93C5FD;
+            --blur-background-end: #3B82F6;
+            --bubble-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Fondo con gradiente difuminado */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, var(--blur-background-start), var(--blur-background-end));
+            background-attachment: fixed;
+            background-size: cover;
+            height: 100vh;
+            color: var(--text-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        main {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Imágenes que se agrandan al pasar el cursor */
+        .rotating-images {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .rotating-images img {
+            width: 10%; 
+            max-width: 150px; 
+            margin: 0 10px;
+            transition: transform 0.3s ease-in-out; /* Efecto suave al aumentar */
+        }
+
+        .rotating-images img:hover {
+            transform: scale(1.2); /* Aumenta un 20% el tamaño al hacer hover */
+        }
+
+        /* Estilo comprimido de los botones */
+        .filter-container {
+            background-color: var(--accent-color);
+            padding: 1rem; /* Padding reducido para comprimir el filtro */
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-container h2 {
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+            font-size: 1.5rem; /* Tamaño de título reducido */
+        }
+
+        .filter-container label {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .filter-container input, .filter-container select {
+            width: 100%;
+            padding: 0.4rem; /* Tamaño reducido de los campos */
+            margin-bottom: 0.75rem; /* Margen inferior reducido */
+            border: 1px solid var(--secondary-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .filter-container input[type="range"] {
+            width: 100%;
+        }
+
+        .filter-container button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem; /* Tamaño del botón reducido */
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s, background-color 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+            font-size: 0.9rem;
+        }
+
+        .filter-container button:hover {
+            background-color: var(--button-hover-bg);
+            transform: scale(1.05);
+            box-shadow: 0 0 10px var(--button-hover-shadow);
+        }
+
+        /* Resultados */
+        .results-container {
+            background-color: var(--background-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>ODS del Agua</h1>
+    </header>
+
+    <main>
+        <!-- Imágenes que aumentan de tamaño al pasar el cursor -->
+        <div class="rotating-images">
+            <img src="https://via.placeholder.com/100x100" alt="Imagen 1">
+            <img src="https://via.placeholder.com/100x100" alt="Imagen 2">
+            <img src="https://via.placeholder.com/100x100" alt="Imagen 3">
+        </div>
+
+        <!-- Filtro comprimido de búsqueda -->
+        <section class="filter-container">
+            <h2>Filtro de búsqueda</h2>
+
+            <label for="year">Año</label>
+            <input type="number" id="year" placeholder="Ingrese un año" min="2000" max="2100">
+
+            <label for="statistic">Tipo de Estadístico</label>
+            <select id="statistic">
+                <option value="max">Máximos Anuales</option>
+                <option value="min">Mínimos Anuales</option>
+                <option value="mean">Media Anual</option>
+                <option value="final">Cantidad embalsada al final del año</option>
+            </select>
+
+            <label for="distance">Distancia (km): <span id="distance-value">50</span> km</label>
+            <input type="range" id="distance" min="1" max="100" value="50" oninput="updateDistanceValue()">
+
+            <button onclick="applyFilter()">Aplicar Filtro</button>
+        </section>
+
+        <!-- Resultados -->
+        <section class="results-container">
+            <h3>Resultados</h3>
+            <ul id="results-list">
+                <!-- Los resultados se mostrarán aquí -->
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 ODS del Agua. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        // Actualizar valor de distancia mostrada
+        function updateDistanceValue() {
+            const distance = document.getElementById('distance').value;
+            document.getElementById('distance-value').textContent = distance;
+        }
+
+        // Función para aplicar el filtro con solicitud de geolocalización
+        async function applyFilter() {
+            const year = document.getElementById('year').value;
+            const statistic = document.getElementById('statistic').value;
+            const distance = document.getElementById('distance').value;
+
+            // Solicitar geolocalización del usuario
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    try {
+                        const response = await fetch('https://g38424687033997-s9ccz2028y5z7jb4.adb.eu-madrid-1.oraclecloudapps.com/ords/user/tabla_completa/');
+                        if (response.ok) {
+                            const data = await response.json();
+                            const filteredData = data.items.filter(item => {
+                                const itemLat = parseFloat(item.latitud);
+                                const itemLon = parseFloat(item.longitud);
+                                const calculatedDistance = calculateDistance(lat, lon, itemLat, itemLon);
+                                return calculatedDistance <= distance && (!year || item.ano == year);
+                            });
+                            displayResults(filteredData);
+                        } else {
+                            console.error('Error en la solicitud:', response.status);
+                            alert('Error en la solicitud al servidor. Intente nuevamente más tarde.');
+                        }
+                    } catch (error) {
+                        console.error('Error en la petición:', error);
+                        alert('Error al procesar la petición. Intente nuevamente más tarde.');
+                    }
+                }, () => {
+                    alert('No se pudo obtener la ubicación');
+                });
+            } else {
+                alert('La geolocalización no es soportada por este navegador');
+            }
+        }
+
+        // Función para mostrar los resultados obtenidos de la API
+        function displayResults(results) {
+            const resultsList = document.getElementById('results-list');
+            resultsList.innerHTML = ''; // Limpiar resultados previos
+
+            if (results.length === 0) {
+                resultsList.innerHTML = '<li>No se encontraron resultados para los filtros aplicados.</li>';
+            } else {
+                results.forEach(result => {
+                    const li = document.createElement('li');
+                    li.textContent = `${result.nombre_embalse} (${result.ano}) - ${result.cantidad_embalsada}`;
+                    resultsList.appendChild(li);
+                });
+            }
+        }
+
+        // Función para calcular la distancia entre dos puntos (en km)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radio de la Tierra en km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                0.5 - Math.cos(dLat)/2 + 
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                (1 - Math.cos(dLon)) / 2;
+            return R * 2 * Math.asin(Math.sqrt(a));
+        }
+    </script>
+</body>
+</html>

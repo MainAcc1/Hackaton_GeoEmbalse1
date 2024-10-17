@@ -1,0 +1,99 @@
+from flask import Flask, request, render_template_string, jsonify
+import geocoder
+import requests
+import math
+
+app = Flask(_name_)
+
+html_template = """
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODS del Agua - Filtro Geolocalización</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.min.css">
+</head>
+<body>
+    <header>
+        <h1>ODS del Agua</h1>
+    </header>
+
+    <main>
+        <section class="filter-container">
+            <h2>Filtro de búsqueda</h2>
+
+            <form action="/" method="post">
+                <label for="year">Año</label>
+                <input type="number" id="year" name="year" placeholder="Ingrese un año" min="2000" max="2100" required>
+
+                <label for="statistic">Tipo de Estadístico</label>
+                <select id="statistic" name="statistic">
+                    <option value="max">Máximos Anuales</option>
+                    <option value="min">Mínimos Anuales</option>
+                    <option value="mean">Media Anual</option>
+                    <option value="final">Cantidad embalsada al final del año</option>
+                </select>
+
+                <label for="distance">Distancia (km)</label>
+                <input type="range" id="distance" name="distance" min="1" max="100" value="50" oninput="this.nextElementSibling.innerText = this.value + ' km'">
+                <span>50 km</span>
+
+                <button type="submit">Aplicar Filtro</button>
+            </form>
+        </section>
+
+        <!-- Resultados -->
+        <section class="results-container">
+            <h3>Resultados</h3>
+            <ul>
+                {% for result in results %}
+                <li>{{ result['nombre_embalse'] }} ({{ result['ano'] }}) - {{ result['cantidad_embalsada'] }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 ODS del Agua. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html>
+"""
+
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    results = []
+    if request.method == 'POST':
+        year = request.form.get('year')
+        statistic = request.form.get('statistic')
+        distance = request.form.get('distance')
+
+        # Obtener la geolocalización del usuario (simulado)
+        g = geocoder.ip('me')
+        lat, lon = g.latlng if g.latlng else (None, None)
+
+        if lat and lon:
+            print(f"Latitud: {lat}, Longitud: {lon}")
+            try:
+                # Solicitud a la API externa
+                response = requests.get('https://g38424687033997-s9ccz2028y5z7jb4.adb.eu-madrid-1.oraclecloudapps.com/ords/user/tabla_completa/')
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'items' in data:
+                        results = [
+                            item for item in data['items']
+                            if (not year or str(item['ano']) == year)
+                        ]
+                else:
+                    results = [{'nombre_embalse': 'Error', 'ano': '-', 'cantidad_embalsada': 'Error en la solicitud al servidor'}]
+            except Exception as e:
+                print(f"Error en la petición: {e}")
+                results = [{'nombre_embalse': 'Error', 'ano': '-', 'cantidad_embalsada': 'No se pudo conectar con la API externa'}]
+        else:
+            results = [{'nombre_embalse': 'Error', 'ano': '-', 'cantidad_embalsada': 'No se pudo obtener la ubicación'}]
+
+    return render_template_string(html_template, results=results)
+
+if _name_ == "_main_":
+    app.run(debug=True, port=5000)
